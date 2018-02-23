@@ -49,13 +49,15 @@ signal.signal(signal.SIGTERM, signal_handler)
 hangouts = discord.Game(name='Hangouts', url="https://hangouts.google.com", type=1)
 
 @discordClient.event
-async def on_ready():
+@asyncio.coroutine
+def on_ready():
     logger.info('Logged in as {0}({1})'.format(discordClient.user.name, discordClient.user.id))
     logger.info("READY")
-    await discordClient.change_status(game=hangouts)
+    yield from discordClient.change_status(game=hangouts)
 
 @discordClient.event
-async def on_message(message):
+@asyncio.coroutine
+def on_message(message):
     logger.debug("Received message from {0} in {1}: {2}".format(message.author.display_name, message.channel, message.content))
 
     # we do not want the bot to reply to itself
@@ -63,12 +65,12 @@ async def on_message(message):
         return
     elif message.content.startswith("!@#exit"):
         logging.info("Got magic exit sequence, Exiting!")
-        await discordClient.delete_message(message)
-        await discordClient.close()
+        yield from discordClient.delete_message(message)
+        yield from discordClient.close()
 
     else:
-        await discordClient.change_nickname(discord.utils.get(message.server.members, name=discordClient.user.name), "[H][{0}] {1}".format("CHAT NAME", message.author.display_name))
-        await discordClient.send_message(message.channel, message.content)
-        await discordClient.change_nickname(discord.utils.get(message.server.members, name=discordClient.user.name), config.DISCORD_NICK)
+        yield from discordClient.change_nickname(discord.utils.get(message.server.members, name=discordClient.user.name), "[H][{0}] {1}".format("CHAT NAME", message.author.display_name))
+        yield from discordClient.send_message(message.channel, message.content)
+        yield from discordClient.change_nickname(discord.utils.get(message.server.members, name=discordClient.user.name), config.DISCORD_NICK)
 
 discordClient.run(config.DISCORD_TOKEN)
